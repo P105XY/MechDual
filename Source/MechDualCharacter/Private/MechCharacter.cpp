@@ -10,12 +10,18 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "MechDualCharacter/Public/MechPlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "MechCharacterMovementComponent.h"
+#include "Engine/DataAsset.h"
 
 // Sets default values
-AMechCharacter::AMechCharacter()
+AMechCharacter::AMechCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UMechCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	bUseControllerRotationYaw = false;
 
 	CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("PlayerCameraArm"));
 	CameraArm->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
@@ -30,12 +36,31 @@ AMechCharacter::AMechCharacter()
 
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
 	PlayerCamera->SetupAttachment(CameraArm, USpringArmComponent::SocketName);
+
+	MechCharacterMovementComponent = Cast<UMechCharacterMovementComponent>(GetCharacterMovement());
+	MechCharacterMovementComponent->bOrientRotationToMovement = true;
+	MechCharacterMovementComponent->bUseControllerDesiredRotation = false;
 }
 
 // Called when the game starts or when spawned
 void AMechCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (PlayerController == nullptr)
+	{
+		return;
+	}
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+	if (Subsystem == nullptr)
+	{
+		return;
+	}
+
+	Subsystem->ClearAllMappings();
+	Subsystem->AddMappingContext(InputContext, 0);
 }
 
 // Called every frame
@@ -50,73 +75,40 @@ void AMechCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-
-	UEnhancedInputLocalPlayerSubsystem* subSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
-	subSystem->ClearAllMappings();
-	subSystem->AddMappingContext(InputContext, 0);
-
 	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	PEI->BindAction(MoveFront, ETriggerEvent::Triggered, this, &AMechCharacter::MovementFront);
-	PEI->BindAction(MoveSide, ETriggerEvent::Triggered, this, &AMechCharacter::MovementSide);
+	if (PEI == nullptr)
+	{
+		return;
+	}
+
+	PEI->BindAction(Movement, ETriggerEvent::Triggered, this, &AMechCharacter::Movment);
 	PEI->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &AMechCharacter::LookAround);
 }
 
-void AMechCharacter::MovementFront(const FInputActionValue& Value)
+void AMechCharacter::Movment(const FInputActionInstance& Instance)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	FVector2D MovementVector = Instance.GetValue().Get<FVector2D>();
 
-	if (PlayerController)
+	if (Controller != nullptr)
 	{
-		const FVector2D MoveValue = Value.Get<FVector2D>();
-		const FRotator MovementRotation(0, PlayerController->GetControlRotation().Yaw, 0);
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		const FVector FowardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// Forward/Backward direction
-		if (MoveValue.Y != 0.f)
-		{
-			// Get forward vector
-			const FVector Direction = MovementRotation.RotateVector(FVector::ForwardVector);
-
-			AddMovementInput(Direction, MoveValue.Y);
-		}
+		AddMovementInput(FowardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
-void AMechCharacter::MovementSide(const FInputActionValue& Value)
+void AMechCharacter::LookAround(const FInputActionInstance& Instance)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	FVector2D LookVector = Instance.GetValue().Get<FVector2D>();
 
-	if (PlayerController)
+	if (Controller != nullptr)
 	{
-		const FVector2D MoveValue = Value.Get<FVector2D>();
-		const FRotator MovementRotation(0, PlayerController->GetControlRotation().Yaw, 0);
-
-		// Right/Left direction
-		if (MoveValue.X != 0.f)
-		{
-			// Get right vector
-			const FVector Direction = MovementRotation.RotateVector(FVector::RightVector);
-
-			AddMovementInput(Direction, MoveValue.X);
-		}
-	}
-}
-
-void AMechCharacter::LookAround(const FInputActionValue& Value)
-{
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-
-	if (IsValid(PlayerController))
-	{
-		const FVector2D lookValue = Value.Get<FVector2D>();
-		if (lookValue.X != 0)
-		{
-			AddControllerPitchInput(-lookValue.X);
-		}
-		if (lookValue.Y != 0)
-		{
-			AddControllerYawInput(lookValue.Y);
-		}
+		AddControllerYawInput(LookVector.X);
+		AddControllerPitchInput(LookVector.Y);
 	}
 }
 
