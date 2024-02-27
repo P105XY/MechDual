@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Net/UnrealNetwork.h"
 #include "MechCharacter.generated.h"
 
 struct FInputActionValue;
@@ -29,15 +30,43 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+	UFUNCTION(BlueprintPure, Category = "Health")
+	FORCEINLINE float GetHealth() const { return MaxHealth; }
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	FORCEINLINE void SetHealth(float NewHealth) { MaxHealth = NewHealth; }
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	FORCEINLINE void SetCurrentHealth(float NewHealth)
+	{
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			CurrentHealth = FMath::Clamp(NewHealth, 0.f, MaxHealth);
+			OnUpdateHealth();
+		}
+	}
+
+public:
+	float TakeDamage(float DamageTaken, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
 protected:
 	void Movment(const FInputActionInstance& Instance);
 	void LookAround(const FInputActionInstance& Instance);
+
+private:
+	void OnUpdateHealth();
+
+protected:
+	UFUNCTION()
+	void OnRep_CurrentHealth();
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "InputMapping")
@@ -48,14 +77,24 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "InputAction", meta = (DisplayName = "LookAround"))
 	UInputAction* LookAroundAction;
-
-private:
-	TObjectPtr<USpringArmComponent> CameraArm;
-	TObjectPtr<UCameraComponent> PlayerCamera;
 	
+private:
 	UPROPERTY()
 	UEnhancedInputComponent* EnhancedInputComponent;
 
 	UPROPERTY()
 	UMechCharacterMovementComponent* MechCharacterMovementComponent;
+
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Health")
+	float MaxHealth;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentHealth, Category = "Health")
+	float CurrentHealth;
+
+private:
+	TObjectPtr<USpringArmComponent> CameraArm;
+	TObjectPtr<UCameraComponent> PlayerCamera;
+
 };

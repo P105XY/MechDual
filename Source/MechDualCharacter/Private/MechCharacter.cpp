@@ -2,8 +2,9 @@
 
 
 #include "MechCharacter.h"
-#include "InputActionValue.h"
+#include "Engine/DataAsset.h"
 #include "Engine/LocalPlayer.h"
+#include "InputActionValue.h"
 #include "InputTriggers.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -12,7 +13,6 @@
 #include "MechDualCharacter/Public/MechPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MechCharacterMovementComponent.h"
-#include "Engine/DataAsset.h"
 
 // Sets default values
 AMechCharacter::AMechCharacter(const FObjectInitializer& ObjectInitializer)
@@ -85,6 +85,13 @@ void AMechCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PEI->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &AMechCharacter::LookAround);
 }
 
+void AMechCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AMechCharacter, CurrentHealth);
+}
+
 void AMechCharacter::Movment(const FInputActionInstance& Instance)
 {
 	FVector2D MovementVector = Instance.GetValue().Get<FVector2D>();
@@ -112,3 +119,35 @@ void AMechCharacter::LookAround(const FInputActionInstance& Instance)
 	}
 }
 
+void AMechCharacter::OnUpdateHealth()
+{
+	if (IsLocallyControlled())
+	{
+		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		if (CurrentHealth <= 0)
+		{
+			FString deathMessage = FString::Printf(TEXT("You have been killed."));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+		}
+	}
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+	}
+}
+
+float AMechCharacter::TakeDamage(float DamageTaken, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float DamageApplied = CurrentHealth - DamageTaken;
+	SetCurrentHealth(DamageApplied);
+	return DamageApplied;
+}
+
+void AMechCharacter::OnRep_CurrentHealth()
+{
+	OnUpdateHealth();
+}
