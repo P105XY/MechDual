@@ -2,12 +2,39 @@
 
 
 #include "MechPlayerProjectileBase.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 // Sets default values
-AMechPlayerProjectileBase::AMechPlayerProjectileBase()
+AMechPlayerProjectileBase::AMechPlayerProjectileBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+
+	ProjectileComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
+	ProjectileComponent->InitSphereRadius(37.5f);
+	ProjectileComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	ProjectileComponent->OnComponentHit.AddDynamic(this, &AMechPlayerProjectileBase::OnProjectileImpact);
+
+	RootComponent = ProjectileComponent;
+
+	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	ProjectileMesh->SetupAttachment(RootComponent);
+
+	ProjectileMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -37.5f));
+	ProjectileMesh->SetRelativeScale3D(FVector(0.75f, 0.75f, 0.75f));
+
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovementComponent->SetUpdatedComponent(ProjectileComponent);
+	ProjectileMovementComponent->InitialSpeed = 1500.0f;
+	ProjectileMovementComponent->MaxSpeed = 1500.0f;
+	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	ProjectileMovementComponent->ProjectileGravityScale = 0.0f;
+
+	DamageType = UDamageType::StaticClass();
+	Damage = 10.0f;
 
 }
 
@@ -15,7 +42,7 @@ AMechPlayerProjectileBase::AMechPlayerProjectileBase()
 void AMechPlayerProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
@@ -23,5 +50,9 @@ void AMechPlayerProjectileBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AMechPlayerProjectileBase::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
 }
 

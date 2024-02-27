@@ -6,21 +6,42 @@
 #include "GameFramework/Actor.h"
 #include "MechPlayerProjectileBase.generated.h"
 
+class UDamageType;
+class USphereComponent;
+class UStaticMeshComponent;
+class UProjectileMovementComponent;
+
 UCLASS()
 class MECHDUALCHARACTER_API AMechPlayerProjectileBase : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
-	AMechPlayerProjectileBase();
+	AMechPlayerProjectileBase(const FObjectInitializer& ObjectInitializer);
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+public:
+	UFUNCTION()
+	void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile Mesh")
+	TObjectPtr<UStaticMeshComponent> ProjectileMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision Component")
+	TObjectPtr<USphereComponent> ProjectileComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision Particle")
+	TObjectPtr<UParticleSystemComponent> ExplosionEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "ProjectileMovement")
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
+
+	TSubclassOf<UDamageType> DamageType;
+	float Damage;
 };
