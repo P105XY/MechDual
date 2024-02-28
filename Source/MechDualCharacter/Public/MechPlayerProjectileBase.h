@@ -29,6 +29,10 @@ public:
 	UFUNCTION()
 	void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision Particle Template")
+	TObjectPtr<UParticleSystem> ExplosionEffectTemplate;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile Mesh")
 	TObjectPtr<UStaticMeshComponent> ProjectileMesh;

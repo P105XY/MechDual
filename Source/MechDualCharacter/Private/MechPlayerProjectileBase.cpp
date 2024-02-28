@@ -5,6 +5,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AMechPlayerProjectileBase::AMechPlayerProjectileBase(const FObjectInitializer& ObjectInitializer)
@@ -15,8 +17,7 @@ AMechPlayerProjectileBase::AMechPlayerProjectileBase(const FObjectInitializer& O
 
 	ProjectileComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	ProjectileComponent->InitSphereRadius(37.5f);
-	ProjectileComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-	ProjectileComponent->OnComponentHit.AddDynamic(this, &AMechPlayerProjectileBase::OnProjectileImpact);
+	ProjectileComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));\
 
 	RootComponent = ProjectileComponent;
 
@@ -35,7 +36,6 @@ AMechPlayerProjectileBase::AMechPlayerProjectileBase(const FObjectInitializer& O
 
 	DamageType = UDamageType::StaticClass();
 	Damage = 10.0f;
-
 }
 
 // Called when the game starts or when spawned
@@ -43,6 +43,10 @@ void AMechPlayerProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ProjectileComponent->OnComponentHit.AddDynamic(this, &AMechPlayerProjectileBase::OnProjectileImpact);
+	}
 }
 
 // Called every frame
@@ -54,5 +58,18 @@ void AMechPlayerProjectileBase::Tick(float DeltaTime)
 
 void AMechPlayerProjectileBase::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	FTransform HitTransform = FTransform();
+	FVector HitLocation = GetActorLocation();
+	HitTransform.SetLocation(HitLocation);
+	HitTransform.SetRotation(FQuat::Identity);
+
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectTemplate, HitTransform);
+
+	if (OtherActor)
+	{
+		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitLocation, Hit, GetInstigator()->Controller, this, DamageType);
+	}
+
+	Destroy();
 }
 

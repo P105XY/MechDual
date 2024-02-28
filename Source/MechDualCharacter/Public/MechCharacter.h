@@ -15,6 +15,7 @@ class UInputAction;
 class UCameraComponent;
 class USpringArmComponent;
 class UMechCharacterMovementComponent;
+class AMechPlayerProjectileBase;
 
 UCLASS()
 class MECHDUALCHARACTER_API AMechCharacter : public ACharacter
@@ -60,6 +61,7 @@ public:
 protected:
 	void Movment(const FInputActionInstance& Instance);
 	void LookAround(const FInputActionInstance& Instance);
+	void FireWeapon(const FInputActionInstance& Instance);
 
 private:
 	void OnUpdateHealth();
@@ -67,6 +69,15 @@ private:
 protected:
 	UFUNCTION()
 	void OnRep_CurrentHealth();
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void StartFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void StopFire();
+
+	UFUNCTION(Server, Reliable)
+	void HandleFire();
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "InputMapping")
@@ -77,6 +88,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "InputAction", meta = (DisplayName = "LookAround"))
 	UInputAction* LookAroundAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "InputAction", meta = (DisplayName = "FireWeapon"))
+	UInputAction* FireWeaponAction;
 	
 private:
 	UPROPERTY()
@@ -92,6 +106,20 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentHealth, Category = "Health")
 	float CurrentHealth;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Projectile")
+	TSubclassOf<AMechPlayerProjectileBase> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+	float FireRate;
+
+	UPROPERTY()
+	FTimerHandle FiringTimer;
+
+public:
+
+protected:
+	bool bIsFiringWeapon;
 
 private:
 	TObjectPtr<USpringArmComponent> CameraArm;
