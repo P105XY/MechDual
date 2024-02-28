@@ -185,5 +185,5 @@ void AMechCharacter::HandleFire_Implementation()
 	spawnParameters.Instigator = GetInstigator();
 	spawnParameters.Owner = this;
 
-	AMechPlayerProjectileBase* SpawnedProjectile = GetWorld()->SpawnActor<AMechPlayerProjectileBase>(spawnLocation, spawnRotation, spawnParameters);
+	AMechPlayerProjectileBase* SpawnedProjectile = GetWorld()->SpawnActor<AMechPlayerProjectileBase>(ProjectileClass, spawnLocation, spawnRotation, spawnParameters);
 }

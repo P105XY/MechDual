@@ -9,15 +9,15 @@
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
-AMechPlayerProjectileBase::AMechPlayerProjectileBase(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+AMechPlayerProjectileBase::AMechPlayerProjectileBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
 	ProjectileComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	ProjectileComponent->InitSphereRadius(37.5f);
-	ProjectileComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));\
+	ProjectileComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	ProjectileComponent->MoveIgnoreActors.Add(GetOwner());
 
 	RootComponent = ProjectileComponent;
 
@@ -45,7 +45,7 @@ void AMechPlayerProjectileBase::BeginPlay()
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		ProjectileComponent->OnComponentHit.AddDynamic(this, &AMechPlayerProjectileBase::OnProjectileImpact);
+		ProjectileComponent->OnComponentBeginOverlap.AddDynamic(this, &AMechPlayerProjectileBase::OnProjectileImpact);
 	}
 }
 
@@ -56,18 +56,32 @@ void AMechPlayerProjectileBase::Tick(float DeltaTime)
 
 }
 
-void AMechPlayerProjectileBase::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AMechPlayerProjectileBase::OnProjectileImpact(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	FTransform HitTransform = FTransform();
 	FVector HitLocation = GetActorLocation();
 	HitTransform.SetLocation(HitLocation);
 	HitTransform.SetRotation(FQuat::Identity);
 
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectTemplate, HitTransform);
+	if (OtherActor->IsA(AMechPlayerProjectileBase::StaticClass()))
+	{
+		return;
+	}
+
+	if (OtherActor == GetInstigator())
+	{
+		return;
+	}
+
+	if (OtherActor == GetOwner())
+	{
+		return;
+	}
 
 	if (OtherActor)
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitLocation, Hit, GetInstigator()->Controller, this, DamageType);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectTemplate, HitTransform);
+		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitLocation, SweepResult, GetInstigator()->Controller, this, DamageType);
 	}
 
 	Destroy();

@@ -17,7 +17,7 @@ class MECHDUALCHARACTER_API AMechPlayerProjectileBase : public AActor
 	GENERATED_BODY()
 	
 public:	
-	AMechPlayerProjectileBase(const FObjectInitializer& ObjectInitializer);
+	AMechPlayerProjectileBase();
 
 protected:
 	virtual void BeginPlay() override;
@@ -27,10 +27,10 @@ public:
 
 public:
 	UFUNCTION()
-	void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnProjectileImpact(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision Particle Template")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GamePlay|Collision Particle Template")
 	TObjectPtr<UParticleSystem> ExplosionEffectTemplate;
 
 protected:
