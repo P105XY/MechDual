@@ -16,6 +16,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UMechCharacterMovementComponent;
 class AMechPlayerProjectileBase;
+class USkeletalMeshComponent;
 
 UCLASS()
 class MECHDUALCHARACTER_API AMechCharacter : public ACharacter
@@ -117,6 +118,32 @@ protected:
 	FTimerHandle FiringTimer;
 
 public:
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|Head")
+	TObjectPtr<USkeletalMeshComponent> HeadMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|Arm")
+	TObjectPtr<USkeletalMeshComponent> ArmMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|Body")
+	TObjectPtr<USkeletalMeshComponent> BodyMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|Leg")
+	TObjectPtr<USkeletalMeshComponent> LegMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|MainWeapon")
+	TObjectPtr<USkeletalMeshComponent> MainWeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|SubWeapon")
+	TObjectPtr<USkeletalMeshComponent> SubWeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|LeftShoulderWeapon")
+	TObjectPtr<USkeletalMeshComponent> LeftShoulderWeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|RightShoulderWeapon")
+	TObjectPtr<USkeletalMeshComponent> RightShoulderWeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerMesh|BoosterMesh")
+	TObjectPtr<USkeletalMeshComponent> BoosterMesh;
 
 protected:
 	bool bIsFiringWeapon;

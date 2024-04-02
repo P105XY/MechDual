@@ -9,6 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "MechDualCharacter/Public/MechPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -42,6 +43,16 @@ AMechCharacter::AMechCharacter(const FObjectInitializer& ObjectInitializer)
 	MechCharacterMovementComponent = Cast<UMechCharacterMovementComponent>(GetCharacterMovement());
 	MechCharacterMovementComponent->bOrientRotationToMovement = true;
 	MechCharacterMovementComponent->bUseControllerDesiredRotation = false;
+
+	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
+	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmMesh"));
+	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BodyMesh"));
+	LegMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegMesh"));
+	MainWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MainWeaponMesh"));
+	SubWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SubWeaponMesh"));
+	LeftShoulderWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftShoulderWeaponMesh"));
+	RightShoulderWeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RightShoulderWeaponMesh"));
+	BoosterMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BoosterMesh"));
 }
 
 // Called when the game starts or when spawned

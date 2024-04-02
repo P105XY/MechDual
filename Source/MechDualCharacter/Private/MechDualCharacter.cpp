@@ -5,7 +5,7 @@
 
 IMPLEMENT_GAME_MODULE(FMechDualCharacterModule, MechDualCharacter);
 
-DEFINE_LOG_CATEGORY(LogMechDual)
+DEFINE_LOG_CATEGORY(LogMechDualCharacter)
 
 void FMechDualCharacterModule::StartupModule()
 {

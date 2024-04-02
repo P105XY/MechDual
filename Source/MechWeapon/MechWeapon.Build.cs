@@ -2,15 +2,15 @@
 
 using UnrealBuildTool;
 
-public class MechDualCharacter : ModuleRules
+public class MechWeapon : ModuleRules
 {
-	public MechDualCharacter(ReadOnlyTargetRules Target) : base(Target)
+	public MechWeapon(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "EnhancedInput", "Core", "CoreUObject", "Engine", "InputCore", "MechWeapon" });
+		PublicDependencyModuleNames.AddRange(new string[] { "EnhancedInput", "Core", "CoreUObject", "Engine", "InputCore"});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "EnhancedInput", "MechWeapon" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "EnhancedInput"});
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
